@@ -34,6 +34,8 @@ var CastDeviceEmulator = function () {
     _classCallCheck(this, CastDeviceEmulator);
 
     this.options = options;
+    this.onConnected = null;
+    this.onMessage = null;
 
     /**
      * WebSocker server instance.
@@ -72,7 +74,9 @@ var CastDeviceEmulator = function () {
 
   }, {
     key: 'start',
-    value: function start(callback) {
+    value: function start(onListening, onConnected, onMessage) {
+      this.onConnected = onConnected;
+      this.onMessage = onMessage;
       this.wss = new WebSocket.Server({
         port: serverConfig.port,
         path: serverConfig.path
@@ -87,7 +91,7 @@ var CastDeviceEmulator = function () {
           log('Established a websocket server at port ' + serverConfig.port);
           log('Ready for Chromecast receiver connections..');
         }
-        if (callback) callback();
+        if (onListening) onListening();
       }.bind(this));
     }
 
@@ -112,7 +116,7 @@ var CastDeviceEmulator = function () {
       var _this = this;
 
       if (!this.wss) {
-        log('There is no websocket existing.');
+        log('There is no existing websocket.');
         return;
       }
       this.wss.close(function () {
@@ -130,6 +134,8 @@ var CastDeviceEmulator = function () {
   }, {
     key: '_webSocketConnectionHandler',
     value: function _webSocketConnectionHandler(ws) {
+      var _this2 = this;
+
       if (!this.options.silent) log('There is a cast client just connected.');
       /**
        * Listen to message events on each socket connection
@@ -144,11 +150,38 @@ var CastDeviceEmulator = function () {
         var sendRecordedMessage = function sendRecordedMessage() {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(m.ipcMessage);
-            log(chalk.red('>>'), m.ipcMessage);
+            if (!_this2.options.quiet) {
+              log(chalk.red('>>'), m.ipcMessage);
+            }
           }
         };
         setTimeout(sendRecordedMessage, m.time);
       });
+
+      if (this.onConnected) {
+        this.onConnected({
+          /**
+           * Send message interactively
+           */
+          send: function send(messages) {
+            if (ws.readyState === WebSocket.OPEN) {
+              messages.map(function (m) {
+                var sendRecordedMessage = function sendRecordedMessage() {
+                  if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(m.ipcMessage);
+                    if (!_this2.options.quiet) {
+                      log(chalk.red('>>'), m.ipcMessage);
+                    }
+                  }
+                };
+                setTimeout(sendRecordedMessage, m.time);
+              });
+            } else {
+              log('Websocket is closed, failed to send message.');
+            }
+          }
+        });
+      }
     }
 
     /**
@@ -158,7 +191,10 @@ var CastDeviceEmulator = function () {
   }, {
     key: '_webSocketMessageHandler',
     value: function _webSocketMessageHandler(message) {
-      log(chalk.green('<<'), message);
+      if (!this.options.quiet) {
+        log(chalk.green('<<'), message);
+      }
+      if (this.onMessage) this.onMessage(message);
     }
   }]);
 

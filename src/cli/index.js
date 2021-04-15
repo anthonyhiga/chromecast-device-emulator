@@ -3,12 +3,12 @@
 const program = require('commander');
 const manifest = require('../../package.json');
 const { log, error } = require('../log');
-const { startEmulator } = require('./app');
+const { startEmulator, startInteractive } = require('./app');
 
 program
   .name(manifest.name)
   .version(manifest.version, '-v, --version')
-  .usage('start <scenarioFilePath>');
+  .usage('start <scenarioFilePath>|prompt <commandScriptPath>');
 
 /**
  * Defaults to help command
@@ -26,5 +26,12 @@ program
     'Start a chromecast-device-emulator server that serves with given scenario'
   )
   .action(startEmulator);
+
+program
+  .command('prompt [command script]')
+  .description(
+    'Start a chromecast-device-emulator interactive server'
+  )
+  .action(startInteractive);
 
 program.parse(process.argv);
