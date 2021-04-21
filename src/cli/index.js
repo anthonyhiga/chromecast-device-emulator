@@ -22,6 +22,8 @@ if (!process.argv.slice(2).length) {
  */
 program
   .command('start <filepath>')
+  .option('--silent', 'Do not display errors')
+  .option('--quiet', 'Do not display messages (e.g. >> and <<)')
   .description(
     'Start a chromecast-device-emulator server that serves with given scenario'
   )
@@ -29,6 +31,8 @@ program
 
 program
   .command('prompt [command script]')
+  .option('--silent', 'Do not display errors')
+  .option('--quiet', 'Do not display messages (e.g. >> and <<)')
   .description(
     'Start a chromecast-device-emulator interactive server'
   )

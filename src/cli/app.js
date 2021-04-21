@@ -3,9 +3,9 @@ const { log, error } = require('../log');
 const CastDeviceEmulator = require('../');
 const repl = require('repl');
 
-function startEmulator(filepath, cmd) {
+function startEmulator(filepath, options, cmd) {
   const fullPath = path.resolve(process.cwd(), filepath);
-  const emulator = new CastDeviceEmulator();
+  const emulator = new CastDeviceEmulator(options);
   try {
     emulator.loadScenario(require(fullPath));
     log(`Scenario file <${fullPath}> has been loaded.`);
@@ -15,9 +15,9 @@ function startEmulator(filepath, cmd) {
   }
 }
 
-function startInteractive(filepath, cmd) {
+function startInteractive(filepath, options, cmd) {
   let commandFile = null;
-  const emulator = new CastDeviceEmulator();
+  const emulator = new CastDeviceEmulator(options);
   if (filepath) {
     const fullPath = path.resolve(process.cwd(), filepath);
     log(`Command file <${fullPath}> has been loaded.`);
